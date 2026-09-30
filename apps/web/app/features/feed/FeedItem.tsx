@@ -1,3 +1,4 @@
+import { RESEARCH_TOPICS, RESEARCH_TOPIC_TAGS } from "@aihot/industry/topics";
 // One report in a feed. Desktop (≥ 961px): a white card beside the time rail. Mobile: a compact row
 // with a divider, the reason in a grey box. One markup, two presentations, as on the original site.
 import { memo } from "react";
@@ -26,7 +27,8 @@ export const FeedItem = memo(function FeedItem({ item, group, filters, read = fa
   const open = () => onOpen?.(item.id);
   const showSources = !!group && (group.additionalSourceCount > 0 || (group.developmentCount <= 1 && group.reportCount > 1));
   const showDevelopments = !!group?.story && group.developmentCount > 1;
-  const tags = showTags ? item.tags.slice(0, 3) : [];
+  const research = RESEARCH_TOPICS.filter((topic) => topic.tags.some((tag) => item.tags.includes(tag)));
+  const tags = showTags ? item.tags.filter((tag) => !RESEARCH_TOPIC_TAGS.includes(tag)).slice(0, 3) : [];
 
   return (
     <article className="paper-card relative min-w-0 lg:card lg:card-hover lg:px-[18px] lg:pb-[14px] lg:pt-[15px]" data-item-id={item.id}>
@@ -69,6 +71,12 @@ export const FeedItem = memo(function FeedItem({ item, group, filters, read = fa
 
       {isX && item.x!.media.length > 0 && <MediaThumbs media={item.x!.media} className="mt-2.5" />}
       {isX && item.x!.quoted?.text && <QuotedLine quoted={item.x!.quoted} />}
+
+      {research.length > 0 && (
+        <div className="relative z-10 mt-3 flex flex-wrap gap-1.5" aria-label="论文研究方向">
+          {research.map((topic) => <Link key={topic.slug} to={`/all?topic=${topic.slug}`} className="rounded-mark bg-accent-softer px-2 py-1 text-[11px] font-medium text-accent-ink hover:bg-accent-soft">{topic.name}</Link>)}
+        </div>
+      )}
 
       {(tags.length > 0 || (showTags && item.category)) && (
         <div className="relative z-10 mt-2 hidden flex-wrap gap-x-2.5 gap-y-1 text-[12px] text-ink-4 lg:flex">

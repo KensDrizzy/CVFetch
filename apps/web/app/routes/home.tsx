@@ -1,3 +1,4 @@
+import { researchTopic } from "@aihot/industry/topics";
 import { HOME } from "@aihot/industry/site";
 import { Link, data as withHeaders, redirect, useLoaderData } from "react-router";
 import type { Route } from "./+types/home";
@@ -8,7 +9,7 @@ import { listPath, organizationLd, pageMeta } from "../lib/seo";
 import { Wordmark } from "../components/Logo";
 import { Timeline } from "../features/feed/Timeline";
 import { HotTopics } from "../features/feed/HotTopics";
-import { CategoryTabs, SearchField } from "../features/feed/Filters";
+import { ResearchTopicTabs, SearchField } from "../features/feed/Filters";
 import { beijingDate, beijingWeekday } from "../lib/format";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -20,15 +21,17 @@ export async function loader({ request }: Route.LoaderArgs) {
   const categoryParam = url.searchParams.get("category");
   const channel = isChannelKey(channelParam) ? channelParam : "all";
   const category = categoryParam && isCategoryKey(categoryParam) ? categoryParam : null;
+  const topic = url.searchParams.get("topic")?.trim() || null;
+  if (topic && !researchTopic(topic)) throw new Response("Not found", { status: 404 });
   const tag = url.searchParams.get("tag")?.trim() || null;
   const upstream = new Headers();
-  const data = await loadOr404<TimelineResponse>(`/api/site/timeline${queryString({ channel: channel === "all" ? null : channel, category, tag })}`, { responseHeaders: upstream, signal: request.signal });
-  return withHeaders({ data, filters: { channel, category, tag, topic: null } }, { headers: releaseBoundCache(data.refreshAt, 60, Date.now(), upstream) });
+  const data = await loadOr404<TimelineResponse>(`/api/site/timeline${queryString({ channel: channel === "all" ? null : channel, category, tag, topic })}`, { responseHeaders: upstream, signal: request.signal });
+  return withHeaders({ data, filters: { channel, category, tag, topic } }, { headers: releaseBoundCache(data.refreshAt, 60, Date.now(), upstream) });
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const f = loaderData?.filters;
-  const path = listPath("/", { channel: f && f.channel !== "all" ? f.channel : null, category: f?.category, tag: f?.tag });
+  const path = listPath("/", { channel: f && f.channel !== "all" ? f.channel : null, category: f?.category, tag: f?.tag, topic: f?.topic });
   return pageMeta({ path, jsonLd: path === "/" ? organizationLd() : undefined });
 }
 
@@ -68,7 +71,8 @@ function VisionField() {
 
 export default function Home() {
   const { data, filters } = useLoaderData<typeof loader>();
-  const title = filters.tag ? `#${filters.tag}` : HOME.feedTitle;
+  const activeTopic = researchTopic(filters.topic);
+  const title = activeTopic?.name ?? (filters.tag ? `#${filters.tag}` : HOME.feedTitle);
   return (
     <div className="research-home pb-6">
       <div className="flex h-16 items-center justify-between lg:hidden">
@@ -93,12 +97,16 @@ export default function Home() {
             <h2 className="text-[21px] font-bold tracking-tight">{title}</h2>
             <span className="hidden text-[12px] text-ink-4 sm:inline">按收录时间排列</span>
           </div>
-          <Link to="/all" className="text-[13px] font-medium text-accent hover:underline">{HOME.allTitle} <span aria-hidden="true">↗</span></Link>
+          <Link to={filters.topic ? `/all?topic=${filters.topic}` : "/all"} className="text-[13px] font-medium text-accent hover:underline">{HOME.allTitle} <span aria-hidden="true">↗</span></Link>
         </div>
-        <div className="research-filters mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <CategoryTabs base="/" category={filters.category} channel={filters.channel} layoutId="home-cat" className="min-w-0" />
-          <SearchField keep={{ category: filters.category }} />
+        <div className="research-filters mb-4 space-y-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[12px] text-ink-4">研究方向 <span className="ml-2">交叉研究可属于多个主题</span></p>
+            <SearchField keep={{ topic: filters.topic, category: filters.category, tag: filters.tag }} />
+          </div>
+          <ResearchTopicTabs base="/" topic={filters.topic} />
         </div>
+        {activeTopic && <p className="mb-4 text-[13px] leading-6 text-ink-3">{activeTopic.definition}</p>}
         {data.hot && <HotTopics entries={data.hot} />}
         <Timeline initial={data} filters={data.filters} />
       </section>

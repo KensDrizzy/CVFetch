@@ -16,20 +16,26 @@ let deadline: number;
 let refreshAt: string;
 let metaDelayMs = 0;
 const apiCookies: Array<string | undefined> = [];
+const apiQueries: string[] = [];
 const api = createServer((req, res) => {
   const url = new URL(req.url!, "http://api.local");
   apiCookies.push(req.headers.cookie);
+  apiQueries.push(url.pathname + url.search);
   res.setHeader("Content-Type", "application/json");
   if (url.pathname === "/api/site/meta") {
     const respond = () => res.end(JSON.stringify({ changelogVersion: "2026-09-28T12:00" }));
     return metaDelayMs ? setTimeout(respond, metaDelayMs) : respond();
   }
   if (url.pathname === "/api/site/timeline") {
-    const filters = { channel: "all", category: url.searchParams.get("category"), tag: null, topic: null };
+    const filters = { channel: "all", category: url.searchParams.get("category"), tag: null, topic: url.searchParams.get("topic") };
     res.setHeader("X-Accel-Expires", `@${deadline}`);
     res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
     return res.end(JSON.stringify({ filters, cards: [], nextCursor: null, refreshAt, dayCounts: [], hot: null, generatedAt: "2026-09-28T00:00:00Z" }));
   }
+  if (url.pathname === "/api/site/pool") return res.end(JSON.stringify({
+    filters: { channel: "all", category: null, tag: null, topic: url.searchParams.get("topic"), q: url.searchParams.get("q"), tab: "time" },
+    items: [], total: 0, page: 1, pageCount: 1, todayCount: 0, freshness: "2026-09-28T00:00:00Z",
+  }));
   if (url.pathname === "/api/site/hot") return res.end(JSON.stringify({ entries: [] }));
   if (url.pathname === "/api/site/echo-client") return res.end(JSON.stringify({ forwarded: req.headers["x-forwarded-for"], real: req.headers["x-real-ip"] }));
   if (url.pathname === "/api/site/items/long-lived") return res.end(JSON.stringify({ id: "long-lived", title: "t" }));
@@ -219,4 +225,21 @@ test("browser caching preserves noindex and private sign-in responses", async ()
 test("a visitor cannot name its own address to the api without a trusted proxy in front", async () => {
   const res = await fetch(`${origin}/api/site/echo-client`, { headers: { "X-Forwarded-For": "6.6.6.6", "X-Real-IP": "6.6.6.6" } });
   assert.deepEqual(await res.json(), { forwarded: "127.0.0.1", real: "127.0.0.1" });
+});
+
+
+test("research direction filters reach the API, survive search, and reject unknown directions", async () => {
+  for (const path of ["/?topic=medical-imaging", "/all?topic=medical-imaging&q=segmentation"]) {
+    const res = await fetch(origin + path);
+    assert.equal(res.status, 200);
+    const html = await res.text();
+    assert.match(html, /医学影像/);
+    assert.match(html, /遥感视觉/);
+    assert.match(html, /name="topic" value="medical-imaging"/);
+    assert.match(html, /aria-current="page" title="医学影像"/);
+  }
+  assert.ok(apiQueries.includes("/api/site/timeline?topic=medical-imaging"));
+  assert.ok(apiQueries.includes("/api/site/pool?topic=medical-imaging&q=segmentation"));
+  const missing = await fetch(origin + "/?topic=not-a-research-direction");
+  assert.equal(missing.status, 404);
 });

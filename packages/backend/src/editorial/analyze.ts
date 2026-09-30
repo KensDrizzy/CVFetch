@@ -10,6 +10,7 @@
 // Material with only a title or a feed summary has its article page fetched before it is judged.
 import { z } from "zod";
 import { CATEGORY_KEYS } from "@aihot/contracts/taxonomy";
+import { mergeResearchTags } from "@aihot/industry/topics";
 import { CATEGORIES } from "@aihot/industry/taxonomy";
 import { SELECTION } from "@aihot/industry/selection";
 import { sql } from "../db.ts";
@@ -240,7 +241,7 @@ async function runScores(a: AnalyzeInputArticle, threshold: number, opts: StepOp
   return { model, threshold, values, receiptIds, reused };
 }
 
-async function runStructure(a: AnalyzeInputArticle, opts: StepOpts): Promise<NonNullable<AnalysisRun["structure"]>> {
+export async function runStructure(a: AnalyzeInputArticle, opts: StepOpts = {}): Promise<NonNullable<AnalysisRun["structure"]>> {
   const model = await modelFor("structure");
   checkAnalysisRunning();
   const res = await chatJson({
@@ -379,7 +380,7 @@ export function normalizeAnalysis(run: AnalysisRun) {
   const threshold = run.scores?.threshold ?? null;
   const selected = relevance === "pass" && sum !== null && threshold !== null && sum >= threshold * SCORE_CALLS;
   const subjects = run.structure?.subjects ?? [];
-  const tags = [...(run.writing?.tags ?? run.structure?.tags ?? [])];
+  const tags = mergeResearchTags(run.writing?.tags ?? run.structure?.tags ?? [], run.structure?.tags ?? []);
   for (const s of subjects) {
     const display = ENTITIES[s]?.displayTag;
     if (display && !tags.includes(display)) tags.push(display);
@@ -433,6 +434,7 @@ export async function analyzeArticle(articleId: string, opts: StepOpts = {}): Pr
     ...(w ? { writer: w.kind, writerModel: w.model, itemType: w.itemType ?? null, authorRole: w.authorRole ?? null } : {}),
     ...(w?.identityGuard?.outcome === "fallback" ? { identityGuard: w.identityGuard } : {}),
     fact: out.fact,
+    researchTopicsVersion: run.structure ? PROMPT_VERSIONS.structure : null,
   };
   const committed = await sql.begin(async (tx) => {
     const [current] = await tx<{ revision: number }[]>`SELECT revision FROM articles WHERE id = ${articleId} FOR UPDATE`;

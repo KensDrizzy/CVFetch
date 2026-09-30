@@ -1,3 +1,5 @@
+import { RESEARCH_TOPIC_TAGS } from "./topics.ts";
+
 // 这个行业的分类体系：类别、标签词表、公司（主体）名录，以及防止张冠李戴的身份词典。
 // 模型按这里的词表打标签，主题页（topics.json）按标签归类，筛选栏按类别分组。
 // 换行业时：类别的 key 会出现在网址里（/all?category=…），上线后就不要再改；标签和名录可以随时增减。
@@ -32,6 +34,7 @@ export const CATEGORY_TAGS = [
 
 /** 可选的主题标签。 */
 export const TOPIC_TAGS = [
+  ...RESEARCH_TOPIC_TAGS,
   "Agent", "编码", "推理", "多模态", "语音", "视频", "图像生成", "RAG", "端侧", "数据/训练", "搜索", "部署/工程", "开源生态", "具身智能", "MCP/工具调用",
 ] as const;
 

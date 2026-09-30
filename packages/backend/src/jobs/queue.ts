@@ -8,6 +8,7 @@ let starting: Promise<PgBoss> | null = null;
 
 export const QUEUES = {
   analyze: "content.analyze",
+  researchTopics: "content.research-topics",
   translate: "content.translate",
   extractBody: "content.extract-body",
   group: "events.group",
@@ -26,6 +27,7 @@ type QueueOptions = NonNullable<Parameters<PgBoss["createQueue"]>[1]>;
 
 /** Queue definitions in one place; created on first use by any process. */
 export const QUEUE_OPTIONS: Record<string, QueueOptions> = {
+  [QUEUES.researchTopics]: { policy: "short", retryLimit: 4, retryDelay: 60, retryBackoff: true, expireInSeconds: 600 },
   [QUEUES.analyze]: { policy: "short", retryLimit: 4, retryDelay: 30, retryBackoff: true, expireInSeconds: 600 },
   [QUEUES.translate]: { policy: "short", retryLimit: 3, retryDelay: 60, retryBackoff: true, expireInSeconds: 900 },
   [QUEUES.extractBody]: { policy: "short", retryLimit: 2, retryDelay: 120, expireInSeconds: 300 },

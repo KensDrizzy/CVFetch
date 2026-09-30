@@ -1,3 +1,4 @@
+import { RESEARCH_TOPICS } from "@aihot/industry/topics";
 import type { FeedItemSummary } from "@aihot/contracts/site";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -81,7 +82,7 @@ export function topicPageCounts(): Promise<TopicCount[]> {
 async function queryTopicCounts(): Promise<TopicCount[]> {
   const [topics, items] = await Promise.all([
     sql<Array<Pick<TopicRow, "slug" | "entity_id" | "tags">>>`SELECT slug, entity_id, tags FROM topics ORDER BY position`,
-    sql<{ tags: string[]; timeline_at: Date }[]>`SELECT p.tags, p.timeline_at FROM publications p WHERE p.visibility = 'public' AND p.selected`,
+    sql<{ tags: string[]; timeline_at: Date }[]>`SELECT p.tags, p.timeline_at FROM publications p WHERE ${selectedCondition(new Date())}`,
   ]);
   const recentFrom = Date.now() - 30 * 86400_000;
   return topics.map((t) => {
@@ -110,10 +111,10 @@ export interface TopicSummary {
   latestAt: string | null;
 }
 
-export async function listTopicSummaries(): Promise<TopicSummary[]> {
+export async function listTopicSummaries(includeArchived = false): Promise<TopicSummary[]> {
   const topics = await listTopics();
   const counts = new Map((await topicPageCounts()).map((c) => [c.slug, c]));
-  return topics.map((t) => {
+  return topics.filter((t) => includeArchived || RESEARCH_TOPICS.some((active) => active.slug === t.slug)).map((t) => {
     const c = counts.get(t.slug);
     return { slug: t.slug, name: t.name, group: t.grp, definition: t.definition, total: c?.total ?? 0, recent: c?.recent ?? 0, indexable: c?.indexable ?? false, latestAt: c?.latest?.toISOString() ?? null };
   });
@@ -129,7 +130,7 @@ export interface TopicPage {
 export async function loadTopicPage(slug: string, page: number, now = new Date()): Promise<TopicPage | null> {
   const row = await loadTopic(slug);
   if (!row || page < 1) return null;
-  const topics = await listTopicSummaries();
+  const topics = await listTopicSummaries(true);
   const topic = topics.find((t) => t.slug === slug);
   if (!topic) return null;
   const pageCount = Math.max(1, Math.ceil(topic.total / TOPIC_PAGE_SIZE));

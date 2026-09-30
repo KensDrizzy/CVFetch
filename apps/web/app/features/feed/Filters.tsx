@@ -1,9 +1,8 @@
-// Feed filters: the channel and category row, and search.
+// Feed filters: research directions and search.
 import { useEffect, useRef, useState } from "react";
 import { Form, Link, useNavigation, useSearchParams } from "react-router";
-import { CATEGORY_KEYS, CATEGORY_LABELS, CHANNEL_LABELS, type CategoryKey, type ChannelKey } from "@aihot/contracts/taxonomy";
+import { RESEARCH_TOPICS } from "@aihot/industry/topics";
 import { IconClose, IconSearch } from "../../components/icons";
-import { PillTabs } from "../../components/ui/Tabs";
 
 /** Same page with some query parameters changed (paging state dropped). */
 export function hrefWith(base: string, params: URLSearchParams, patch: Record<string, string | null>) {
@@ -18,20 +17,24 @@ export function hrefWith(base: string, params: URLSearchParams, patch: Record<st
   return s ? `${base}?${s}` : base;
 }
 
-/**
- * The feed's one filter row (精选 and 全部动态 alike): 全部, 一手, then the categories. One choice at a
- * time: picking 一手 clears the category and picking a category clears 一手. Older 资讯 / X links
- * still filter; the row then shows 全部.
- */
-export function CategoryTabs({ base, category, channel = "all", layoutId, size = "md", className = "" }: { base: string; category: CategoryKey | null; channel?: ChannelKey; layoutId: string; size?: "md" | "sm"; className?: string }) {
+/** Research directions are multi-label topics, separate from the article's content type. */
+export function ResearchTopicTabs({ base, topic, className = "" }: { base: string; topic: string | null; className?: string }) {
   const [params] = useSearchParams();
-  const items = [
-    { key: "all", label: "全部", to: hrefWith(base, params, { category: null, channel: null }) },
-    { key: "firstParty", label: CHANNEL_LABELS.firstParty, to: hrefWith(base, params, { category: null, channel: "firstParty" }) },
-    ...CATEGORY_KEYS.map((k) => ({ key: k, label: CATEGORY_LABELS[k], to: hrefWith(base, params, { category: k, channel: null }) })),
-  ];
-  const active = channel === "firstParty" ? "firstParty" : (category ?? "all");
-  return <PillTabs items={items} active={active} layoutId={layoutId} label="筛选" size={size} className={className} />;
+  const items = [{ slug: "", name: "全部", label: "全部" }, ...RESEARCH_TOPICS];
+  return (
+    <nav aria-label="研究方向" className={`flex flex-wrap gap-2 ${className}`}>
+      {items.map((item) => {
+        const active = (topic ?? "") === item.slug;
+        return (
+          <Link key={item.slug} to={hrefWith(base, params, { topic: item.slug || null, category: null, channel: null, tag: null })}
+            aria-current={active ? "page" : undefined} title={item.name}
+            className={`rounded-control border px-3 py-2 text-[13px] font-medium transition-colors ${active ? "border-accent/30 bg-accent-soft text-accent-ink" : "border-transparent bg-bg-sunk text-ink-3 hover:border-line-strong hover:text-ink"}`}>
+            {item.name}
+          </Link>
+        );
+      })}
+    </nav>
+  );
 }
 
 function useSlashFocus(ref: React.RefObject<HTMLInputElement | null>) {
