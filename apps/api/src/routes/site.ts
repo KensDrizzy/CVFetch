@@ -96,9 +96,11 @@ export function registerSite(app: FastifyInstance) {
     const q = looseQuery(req);
     const filters = await parseFilters(q);
     const limit = Math.min(Math.max(Number(q.limit) || 20, 1), 40);
+    const page = q.page === undefined ? undefined : Number(q.page);
+    if (page !== undefined && (!Number.isSafeInteger(page) || page < 1 || page > 100_000 || q.cursor)) throw new BadRequest("invalid timeline page");
     const unfiltered = filters.channel === "all" && !filters.category && !filters.tag && !filters.topic && !filters.contentType && !q.cursor;
     const [data, hot] = await Promise.all([
-      loadTimeline({ ...filters, cursor: q.cursor || null, limit }),
+      loadTimeline({ ...filters, cursor: q.cursor || null, limit, page }),
       unfiltered ? loadHotStrip() : null,
     ]);
     const body = { ...data, hot, generatedAt: new Date().toISOString() };

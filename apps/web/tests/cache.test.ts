@@ -30,7 +30,7 @@ const api = createServer((req, res) => {
     const filters = { channel: "all", category: url.searchParams.get("category"), tag: null, topic: url.searchParams.get("topic") };
     res.setHeader("X-Accel-Expires", `@${deadline}`);
     res.setHeader("Cache-Control", "public, max-age=30, s-maxage=30");
-    return res.end(JSON.stringify({ filters, cards: [], nextCursor: null, refreshAt, dayCounts: [], hot: null, generatedAt: "2026-09-28T00:00:00Z" }));
+    return res.end(JSON.stringify({ filters, cards: [], pagination: { page: Number(url.searchParams.get("page") || 1), pageSize: 20, total: 45, pageCount: 3 }, nextCursor: null, refreshAt, dayCounts: [], hot: null, generatedAt: "2026-09-28T00:00:00Z" }));
   }
   if (url.pathname === "/api/site/pool") return res.end(JSON.stringify({
     filters: { channel: "all", category: null, tag: null, topic: url.searchParams.get("topic"), q: url.searchParams.get("q"), tab: "time" },
@@ -239,7 +239,7 @@ test("research direction filters reach the API, survive search, and reject unkno
     assert.match(html, /name="topic" value="medical-imaging"/);
     assert.match(html, /aria-current="page" title="医学影像"/);
   }
-  assert.ok(apiQueries.includes("/api/site/timeline?topic=medical-imaging&contentType=paper"));
+  assert.ok(apiQueries.includes("/api/site/timeline?topic=medical-imaging&contentType=paper&page=1&limit=20"));
   assert.ok(apiQueries.includes("/api/site/pool?topic=medical-imaging&contentType=paper&q=segmentation"));
   const missing = await fetch(origin + "/?topic=not-a-research-direction");
   assert.equal(missing.status, 404);
@@ -257,4 +257,20 @@ test("author updates use a separate filtered API scope and show honest empty sta
   const directory = await fetch(origin + "/following");
   assert.equal(directory.status, 200);
   assert.match(await directory.text(), /关注来源/);
+});
+
+
+test("home uses numbered selected pages and keeps the research filter in page links", async () => {
+  const res = await fetch(`${origin}/?topic=medical-imaging&page=2`);
+  assert.equal(res.status, 200);
+  const html = await res.text();
+  const query = new URL(apiQueries.filter((q) => q.startsWith("/api/site/timeline")).at(-1)!, "http://api.local");
+  assert.equal(query.searchParams.get("page"), "2");
+  assert.equal(query.searchParams.get("limit"), "20");
+  assert.equal(query.searchParams.get("contentType"), "paper");
+  assert.equal(query.searchParams.get("topic"), "medical-imaging");
+  assert.match(html, /上一页/);
+  assert.match(html, /下一页/);
+  assert.match(html, /topic=medical-imaging(?:&amp;|&)page=3#papers/);
+  assert.doesNotMatch(html, /加载更多|已经到底了/);
 });

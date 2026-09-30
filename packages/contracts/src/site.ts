@@ -110,6 +110,7 @@ export interface TimelineFilters {
 }
 
 export interface TimelineResponse {
+  pagination?: { page: number; pageSize: number; total: number; pageCount: number };
   filters: TimelineFilters;
   cards: TimelineCard[];
   nextCursor: string | null;

@@ -7,7 +7,8 @@ import { isCategoryKey, isChannelKey } from "@aihot/contracts/taxonomy";
 import { loadOr404, queryString, releaseBoundCache } from "../lib/api.server";
 import { listPath, organizationLd, pageMeta } from "../lib/seo";
 import { Wordmark } from "../components/Logo";
-import { Timeline } from "../features/feed/Timeline";
+import { TimelinePage } from "../features/feed/TimelinePage";
+import { Pagination } from "../features/feed/DayList";
 import { HotTopics } from "../features/feed/HotTopics";
 import { ResearchTopicTabs, SearchField } from "../features/feed/Filters";
 import { beijingDate, beijingWeekday } from "../lib/format";
@@ -25,14 +26,20 @@ export async function loader({ request }: Route.LoaderArgs) {
   if (topic && !researchTopic(topic)) throw new Response("Not found", { status: 404 });
   const tag = url.searchParams.get("tag")?.trim() || null;
   const contentType = "paper" as const;
+  const requestedPage = Number(url.searchParams.get("page") ?? 1);
+  const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? Math.min(requestedPage, 100_000) : 1;
   const upstream = new Headers();
-  const data = await loadOr404<TimelineResponse>(`/api/site/timeline${queryString({ channel: channel === "all" ? null : channel, category, tag, topic, contentType })}`, { responseHeaders: upstream, signal: request.signal });
+  const data = await loadOr404<TimelineResponse>(`/api/site/timeline${queryString({ channel: channel === "all" ? null : channel, category, tag, topic, contentType, page, limit: 20 })}`, { responseHeaders: upstream, signal: request.signal });
+  if (data.pagination && data.pagination.page !== page) {
+    url.searchParams.set("page", String(data.pagination.page));
+    throw redirect(`${url.pathname}${url.search}`);
+  }
   return withHeaders({ data, filters: { channel, category, tag, topic, contentType } }, { headers: releaseBoundCache(data.refreshAt, 60, Date.now(), upstream) });
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const f = loaderData?.filters;
-  const path = listPath("/", { channel: f && f.channel !== "all" ? f.channel : null, category: f?.category, tag: f?.tag, topic: f?.topic });
+  const path = listPath("/", { channel: f && f.channel !== "all" ? f.channel : null, category: f?.category, tag: f?.tag, topic: f?.topic, page: loaderData?.data.pagination && loaderData.data.pagination.page > 1 ? loaderData.data.pagination.page : null });
   return pageMeta({ path, jsonLd: path === "/" ? organizationLd() : undefined });
 }
 
@@ -72,6 +79,8 @@ function VisionField() {
 
 export default function Home() {
   const { data, filters } = useLoaderData<typeof loader>();
+  const paging = data.pagination;
+  const pageHref = (page: number) => `${listPath("/", { channel: filters.channel !== "all" ? filters.channel : null, category: filters.category, tag: filters.tag, topic: filters.topic, page: page > 1 ? page : null })}#papers`;
   const activeTopic = researchTopic(filters.topic);
   const title = activeTopic?.name ?? (filters.tag ? `#${filters.tag}` : HOME.feedTitle);
   return (
@@ -92,7 +101,7 @@ export default function Home() {
         </div>
         <VisionField />
       </header>
-      <section aria-label={HOME.feedTitle}>
+      <section id="papers" aria-label={HOME.feedTitle}>
         <div className="mb-4 mt-8 flex items-center justify-between gap-3">
           <div className="flex items-baseline gap-3">
             <h2 className="text-[21px] font-bold tracking-tight">{title}</h2>
@@ -109,7 +118,12 @@ export default function Home() {
         </div>
         {activeTopic && <p className="mb-4 text-[13px] leading-6 text-ink-3">{activeTopic.definition}</p>}
         {data.hot && <HotTopics entries={data.hot} />}
-        <Timeline initial={data} filters={data.filters} />
+        {paging && <div className="mb-4 flex flex-wrap items-center justify-between gap-2 [&_nav]:mt-0">
+          <p className="text-[13px] text-ink-3">共 {paging.total} 条 · 每页 {paging.pageSize} 条 · 第 {paging.page} / {paging.pageCount} 页</p>
+          <Pagination page={paging.page} pageCount={paging.pageCount} href={pageHref} />
+        </div>}
+        <TimelinePage key={JSON.stringify([filters, paging?.page])} data={data} />
+        {paging && <Pagination page={paging.page} pageCount={paging.pageCount} href={pageHref} />}
       </section>
     </div>
   );

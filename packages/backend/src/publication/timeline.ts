@@ -13,6 +13,7 @@ import {
 
 export interface TimelineQuery extends TimelineFilters {
   cursor?: string | null;
+  page?: number;
   limit?: number;
   topicTags?: string[] | null;
   now?: Date;
@@ -109,7 +110,9 @@ export async function loadTimeline(q: TimelineQuery): Promise<Omit<TimelineRespo
   const refreshAtRead = nextRelease(q, now);
   refreshAtRead.catch(() => {});
   const grouped = await groupedAnchors(q, now);
-  const start = after ? grouped.findIndex((g) => g.anchor < after!.a || (g.anchor === after!.a && g.gk < after!.g)) : 0;
+  const pageCount = Math.max(1, Math.ceil(grouped.length / limit));
+  const pageNumber = Math.min(Math.max(1, Math.floor(q.page ?? 1)), pageCount);
+  const start = q.page !== undefined ? (pageNumber - 1) * limit : after ? grouped.findIndex((g) => g.anchor < after!.a || (g.anchor === after!.a && g.gk < after!.g)) : 0;
   const groups: GroupRow[] = (start < 0 ? [] : grouped.slice(start, start + limit + 1)).map((g) => ({ gk: g.gk, anchor_at: new Date(g.anchor) }));
 
   const page = groups.slice(0, limit);
@@ -197,7 +200,8 @@ export async function loadTimeline(q: TimelineQuery): Promise<Omit<TimelineRespo
   const refreshAt = await refreshAtRead;
   const last = page[page.length - 1];
   const nextCursor = hasMore && last ? encodeCursor("tl1", { a: last.anchor_at.getTime(), g: last.gk, b: bind }) : null;
-  return { filters: { channel: q.channel, category: q.category, tag: q.tag, topic: q.topic ?? null, contentType: q.contentType ?? null }, cards, nextCursor, refreshAt, dayCounts };
+  return { filters: { channel: q.channel, category: q.category, tag: q.tag, topic: q.topic ?? null, contentType: q.contentType ?? null }, cards, nextCursor, refreshAt, dayCounts,
+    ...(q.page !== undefined ? { pagination: { page: pageNumber, pageSize: limit, total: grouped.length, pageCount } } : {}) };
 }
 
 /** Earliest pending release in this scope; caches of this scope must expire by then. */
