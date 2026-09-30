@@ -36,6 +36,7 @@ const api = createServer((req, res) => {
     filters: { channel: "all", category: null, tag: null, topic: url.searchParams.get("topic"), q: url.searchParams.get("q"), tab: "time" },
     items: [], total: 0, page: 1, pageCount: 1, todayCount: 0, freshness: "2026-09-28T00:00:00Z",
   }));
+  if (url.pathname === "/api/site/sources") return res.end(JSON.stringify({ sources: [] }));
   if (url.pathname === "/api/site/hot") return res.end(JSON.stringify({ entries: [] }));
   if (url.pathname === "/api/site/echo-client") return res.end(JSON.stringify({ forwarded: req.headers["x-forwarded-for"], real: req.headers["x-real-ip"] }));
   if (url.pathname === "/api/site/items/long-lived") return res.end(JSON.stringify({ id: "long-lived", title: "t" }));
@@ -238,8 +239,22 @@ test("research direction filters reach the API, survive search, and reject unkno
     assert.match(html, /name="topic" value="medical-imaging"/);
     assert.match(html, /aria-current="page" title="医学影像"/);
   }
-  assert.ok(apiQueries.includes("/api/site/timeline?topic=medical-imaging"));
-  assert.ok(apiQueries.includes("/api/site/pool?topic=medical-imaging&q=segmentation"));
+  assert.ok(apiQueries.includes("/api/site/timeline?topic=medical-imaging&contentType=paper"));
+  assert.ok(apiQueries.includes("/api/site/pool?topic=medical-imaging&contentType=paper&q=segmentation"));
   const missing = await fetch(origin + "/?topic=not-a-research-direction");
   assert.equal(missing.status, 404);
+});
+
+
+test("author updates use a separate filtered API scope and show honest empty state", async () => {
+  const res = await fetch(origin + "/updates?topic=medical-imaging&q=segmentation");
+  assert.equal(res.status, 200);
+  const html = await res.text();
+  assert.match(html, /研究动态/);
+  assert.match(html, /name="topic" value="medical-imaging"/);
+  assert.match(html, /action="\/updates"/);
+  assert.ok(apiQueries.includes("/api/site/pool?contentType=post&topic=medical-imaging&q=segmentation"));
+  const directory = await fetch(origin + "/following");
+  assert.equal(directory.status, 200);
+  assert.match(await directory.text(), /关注来源/);
 });

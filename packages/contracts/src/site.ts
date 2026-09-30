@@ -8,6 +8,7 @@ export interface SourceRef {
   id: string;
   name: string;
   kind: SourceKind;
+  contentType?: "paper" | "post";
   firstParty: boolean;
   iconUrl: string | null;
   iconSrcSet?: string;
@@ -63,7 +64,7 @@ export interface ItemSummary {
 
 /** The fields rendered by a site feed card; full original text lives in the item detail. */
 export interface FeedItemSummary extends Pick<ItemSummary, "id" | "title" | "summary" | "reason" | "publishedAt" | "timelineAt" | "category" | "tags" | "score" | "selected" | "channel"> {
-  source: Pick<SourceRef, "name">;
+  source: Pick<SourceRef, "name" | "contentType">;
   x: (Pick<XPostView, "authorName" | "handle" | "avatarUrl" | "avatarSrcSet" | "media"> & {
     quoted: Omit<NonNullable<XPostView["quoted"]>, "url"> | null;
   }) | null;
@@ -101,6 +102,7 @@ export interface HotStripEntry {
 }
 
 export interface TimelineFilters {
+  contentType?: "paper" | "post" | null;
   channel: ChannelKey;
   category: CategoryKey | null;
   tag: string | null;

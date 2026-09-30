@@ -5,6 +5,7 @@ import { sql } from "../db.ts";
 import { enqueue, QUEUES } from "../jobs/queue.ts";
 import { republishKey } from "../jobs/publication.ts";
 import { normalizeUrl } from "../lib/url.ts";
+import { ACADEMIC_ADAPTERS, fetchAcademic } from "../sources/academic.ts";
 import { fetchJsonList } from "../sources/json-list.ts";
 import { fetchRss } from "../sources/rss.ts";
 import { assertSupportedConfig } from "../sources/config-keys.ts";
@@ -73,7 +74,7 @@ export async function previewSource(draft: Pick<SourceRow, "id" | "kind" | "conf
   let candidates;
   if (source.kind === "rss") candidates = (await fetchRss(source, { force: true })).candidates;
   else if (source.kind === "web_list") candidates = await fetchWebList(source);
-  else if (source.kind === "json_list") candidates = await fetchJsonList(source);
+  else if (source.kind === "json_list") candidates = ACADEMIC_ADAPTERS.includes(source.config.adapter) ? (await fetchAcademic(source)).candidates : await fetchJsonList(source);
   else if (source.kind === "x_search") candidates = (await fetchXSearch(source)).candidates;
   else throw new Error(`preview is not available for ${source.kind} sources`);
   return {

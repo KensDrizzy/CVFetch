@@ -8,6 +8,7 @@ import { BudgetExceededError } from "../providers/receipts.ts";
 import { fetchRss } from "./rss.ts";
 import { allowed, fetchDetail, fetchWebList, type DetailNeed } from "./web-list.ts";
 import { unsupportedConfig } from "./config-keys.ts";
+import { ACADEMIC_ADAPTERS, fetchAcademic } from "./academic.ts";
 import { fetchJsonList } from "./json-list.ts";
 import { fetchXSearch, planXShards, readXSearch, shardHandle, shardQuery, SHARDABLE_SQL, tweetToCandidate, type XBacklog, type XRead } from "./x.ts";
 import { FetchError, type Candidate, type SourceRow } from "./types.ts";
@@ -112,6 +113,11 @@ export async function collectSource(sourceId: string, opts: { force?: boolean } 
       if (rss.notModified) detail = { notModified: true, httpStatus: 304 };
     }
     else if (source.kind === "web_list") candidates = await fetchWebList(source);
+    else if (source.kind === "json_list" && ACADEMIC_ADAPTERS.includes(source.config.adapter)) {
+      const result = await fetchAcademic(source);
+      candidates = result.candidates;
+      if (result.cursor) nextCursor.academic = result.cursor;
+    }
     else if (source.kind === "json_list") candidates = await fetchJsonList(source);
     else {
       const x = await fetchXSearch(source);
@@ -347,6 +353,8 @@ export async function adaptIntervals(): Promise<{ updated: number }> {
     FROM sources s WHERE s.enabled AND s.kind IN ('rss', 'web_list', 'json_list', 'x_search')`;
   let updated = 0;
   for (const r of rows) {
+    // Scholarly indexes and conference archives keep the explicit, bounded import cadence.
+    if (ACADEMIC_ADAPTERS.includes(r.config.adapter)) continue;
     const perDay = Number(r.per_day);
     // Editorial sites and feeds are looked at hourly at least (they cost nothing);
     // editorial X and listings read through Jina stop at two hours (paid per call, within their budgets);

@@ -24,9 +24,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   const topic = url.searchParams.get("topic")?.trim() || null;
   if (topic && !researchTopic(topic)) throw new Response("Not found", { status: 404 });
   const tag = url.searchParams.get("tag")?.trim() || null;
+  const contentType = "paper" as const;
   const upstream = new Headers();
-  const data = await loadOr404<TimelineResponse>(`/api/site/timeline${queryString({ channel: channel === "all" ? null : channel, category, tag, topic })}`, { responseHeaders: upstream, signal: request.signal });
-  return withHeaders({ data, filters: { channel, category, tag, topic } }, { headers: releaseBoundCache(data.refreshAt, 60, Date.now(), upstream) });
+  const data = await loadOr404<TimelineResponse>(`/api/site/timeline${queryString({ channel: channel === "all" ? null : channel, category, tag, topic, contentType })}`, { responseHeaders: upstream, signal: request.signal });
+  return withHeaders({ data, filters: { channel, category, tag, topic, contentType } }, { headers: releaseBoundCache(data.refreshAt, 60, Date.now(), upstream) });
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {

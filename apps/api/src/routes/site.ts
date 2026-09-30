@@ -1,5 +1,6 @@
 // First-party site API (/api/site/*). Not public, not versioned, never called /api/v2.
 // Reads through the same public read layer as v1; no cookies are read or set.
+import { listPublicSources } from "@aihot/backend/publication/sources";
 import { FEATURES } from "@aihot/industry/features";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { isCategoryKey, isChannelKey, type CategoryKey, type ChannelKey } from "@aihot/contracts/taxonomy";
@@ -57,6 +58,7 @@ export function siteHandler(fn: Handler): Handler {
 }
 
 export interface FilterParams {
+  contentType: "paper" | "post" | null;
   channel: ChannelKey;
   category: CategoryKey | null;
   tag: string | null;
@@ -65,6 +67,8 @@ export interface FilterParams {
 }
 
 export async function parseFilters(q: Record<string, string>): Promise<FilterParams> {
+  const contentType = q.contentType || null;
+  if (contentType !== null && contentType !== "paper" && contentType !== "post") throw new BadRequest("invalid content type");
   const channel = q.channel ?? "all";
   if (!isChannelKey(channel)) throw new BadRequest("invalid channel");
   const category = q.category ?? null;
@@ -76,7 +80,7 @@ export async function parseFilters(q: Record<string, string>): Promise<FilterPar
     topicTags = await loadTopicTags(topic);
     if (!topicTags) throw new BadRequest("unknown topic");
   }
-  return { channel, category: category as CategoryKey | null, tag, topic, topicTags };
+  return { contentType, channel, category: category as CategoryKey | null, tag, topic, topicTags };
 }
 
 export function registerSite(app: FastifyInstance) {
@@ -84,13 +88,15 @@ export function registerSite(app: FastifyInstance) {
     return sendJsonWithEtag(req, reply, siteMeta(), { etagPrefix: "meta", cacheControl: "public, max-age=60, s-maxage=60" });
   }));
 
+  app.get("/api/site/sources", siteHandler(async (req, reply) => sendJsonWithEtag(req, reply, { sources: await listPublicSources() }, { etagPrefix: "sources", cacheControl: "public, max-age=30, s-maxage=30" })));
+
   if (FEATURES.codexResetMonitor) registerCodexReset(app);
 
   app.get("/api/site/timeline", siteHandler(async (req, reply) => {
     const q = looseQuery(req);
     const filters = await parseFilters(q);
     const limit = Math.min(Math.max(Number(q.limit) || 20, 1), 40);
-    const unfiltered = filters.channel === "all" && !filters.category && !filters.tag && !filters.topic && !q.cursor;
+    const unfiltered = filters.channel === "all" && !filters.category && !filters.tag && !filters.topic && !filters.contentType && !q.cursor;
     const [data, hot] = await Promise.all([
       loadTimeline({ ...filters, cursor: q.cursor || null, limit }),
       unfiltered ? loadHotStrip() : null,

@@ -10,14 +10,15 @@ CVFetch 基于 [AIHOT](https://github.com/KKKKhazix/AIHOT) 开源框架改造，
 
 ## 当前功能
 
-- 从 arXiv `cs.CV` 获取论文标题、作者和摘要，去重入库。
+- 从 arXiv `cs.CV`、Semantic Scholar、OpenAlex、CVF Open Access 获取论文元数据与摘要；按 arXiv ID、DOI 等标识跨来源去重。
+- 独立的研究动态页，支持 X、公众号，以及通过 RSS / 外部推送接入的小红书；未配置账号明确显示待配置状态。
 - 通过 OpenAI 兼容模型接口预筛、评分，生成中文标题、摘要和阅读线索。
 - 论文时间线、搜索、收藏、深浅色主题和手机布局。
 - 9 个 CV 研究方向筛选，支持交叉主题；新论文自动归类，已有论文可在 worker 中补标签。
 - 日报、RSS、公开 API、MCP，以及信源、预算和运行状态管理后台。
 - CV 专属取景框与眼睛图标。
 
-目前是试运行版本：首批导入 10 篇，后续每轮读取最新 50 篇，尚未实现历史分页补齐、arXiv 跨版本合并及 PDF 阅读。导读基于标题与摘要，模型评分不代表同行评审结果；首页按收录时间排列。
+目前是试运行版本：arXiv 首批导入 10 篇，后续每轮读取最新 50 篇；Semantic Scholar / OpenAlex 首批各 5 篇，后续读取近期窗口最新 50 篇；CVF 每个会议每天分批归档 5 篇。尚未实现论文索引的历史全量分页补齐及 PDF 阅读。导读基于标题与摘要，模型评分不代表同行评审结果；首页按收录时间排列。
 
 ## 本地运行
 
@@ -60,6 +61,7 @@ GitHub Actions 在推送 `main` 和提交 PR 时执行类型检查、网页构�
 | 信源、主题与分类 | `industry/sources.json`、`industry/topics.json`、`industry/taxonomy.ts` |
 | 模型提示词与筛选门槛 | `industry/prompts/`、`industry/selection.ts` |
 | 图标源文件 | `industry/brand/logo.svg`，修改后运行 `node scripts/brand-icons.ts` |
+| 新增论文库与作者接入 | [多源采集说明](docs/cvfetch-sources.md) |
 | 当前试运行说明 | [运行说明](docs/cvfetch-running.md) |
 | 论文站改造路线 | [改造方案](docs/cvfetch-plan.md) |
 | Docker、域名与服务器部署 | [部署文档](docs/deploy.md) |

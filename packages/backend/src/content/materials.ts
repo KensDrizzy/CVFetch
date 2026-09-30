@@ -3,6 +3,7 @@
 import { sql, type Db } from "../db.ts";
 import { newArticleId, sha256 } from "../lib/ids.ts";
 import { identityKeyForUrl } from "../lib/url.ts";
+import { normalizePaperIdentifier } from "./paper-identity.ts";
 import { collapseWhitespace } from "../lib/text.ts";
 
 export interface MediaItem {
@@ -31,6 +32,8 @@ export interface MaterialInput {
   url: string;
   title: string;
   identityKey?: string;
+  /** Trusted metadata identifiers of this paper, never IDs of papers merely linked by a post. */
+  paperIdentifiers?: string[];
   author?: string | null;
   language?: string | null;
   publishedAt?: Date | null;
@@ -125,7 +128,19 @@ export function identityKeyFor(m: MaterialInput): string {
  * so every change gets its own revision number. Returns whether processing is needed.
  */
 export async function upsertMaterial(m: MaterialInput, db: Db = sql): Promise<MaterialResult> {
-  const run = (tx: Db) => upsertIn(tx, m);
+  const run = async (tx: Db) => {
+    const identifiers = [...new Set([m.url, ...(m.paperIdentifiers ?? [])].map(normalizePaperIdentifier).filter((v): v is string => !!v))].sort();
+    if (!identifiers.length) return upsertIn(tx, m);
+    // Lock aliases in a stable order before resolving: simultaneous aggregators create one paper.
+    for (const id of identifiers) await tx`SELECT pg_advisory_xact_lock(hashtext(${"paper:" + id}))`;
+    const known = await tx<{ article_id: string; identity_key: string }[]>`
+      SELECT DISTINCT i.article_id, a.identity_key FROM paper_identifiers i JOIN articles a ON a.id = i.article_id
+      WHERE i.identifier IN ${tx(identifiers)}`;
+    if (known.length > 1) throw new Error("paper identifiers resolve to different existing articles");
+    const result = await upsertIn(tx, known[0] ? { ...m, identityKey: known[0].identity_key } : m);
+    for (const id of identifiers) await tx`INSERT INTO paper_identifiers (identifier, article_id) VALUES (${id}, ${result.articleId}) ON CONFLICT DO NOTHING`;
+    return result;
+  };
   return "begin" in db ? (db as typeof sql).begin(run) : run(db);
 }
 

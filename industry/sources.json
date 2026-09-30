@@ -1,5 +1,5 @@
 {
-  "$comment": "CVFetch 试运行：首批 10 篇，后续最近 50 篇，不保证全量覆盖。",
+  "$comment": "CVFetch：论文元数据与作者动态分别展示；缺少采集凭据的作者源默认暂停。",
   "sources": [
     {
       "id": "arxiv-cv",
@@ -10,7 +10,10 @@
         "summaryIsBody": true,
         "_aihot": {
           "initialBackfillLimit": 10
-        }
+        },
+        "contentType": "paper",
+        "platform": "arXiv",
+        "profileUrl": "https://arxiv.org/list/cs.CV/recent"
       },
       "tier": "T1",
       "first_party": true,
@@ -22,6 +25,243 @@
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
+    },
+    {
+      "id": "semantic-scholar-cv",
+      "name": "Semantic Scholar · CV",
+      "kind": "json_list",
+      "config": {
+        "adapter": "semantic_scholar",
+        "query": "\"computer vision\" | \"image segmentation\" | \"object detection\" | \"video generation\" | \"3D reconstruction\" | \"vision language\"",
+        "lookbackDays": 90,
+        "contentType": "paper",
+        "platform": "Semantic Scholar",
+        "profileUrl": "https://www.semanticscholar.org/",
+        "_aihot": {
+          "initialBackfillLimit": 5
+        }
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 360,
+      "tags": [
+        "论文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "enabled": true
+    },
+    {
+      "id": "openalex-cv",
+      "name": "OpenAlex · CV",
+      "kind": "json_list",
+      "config": {
+        "adapter": "openalex",
+        "lookbackDays": 90,
+        "contentType": "paper",
+        "platform": "OpenAlex",
+        "profileUrl": "https://openalex.org/",
+        "_aihot": {
+          "initialBackfillLimit": 5
+        }
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 360,
+      "tags": [
+        "论文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "enabled": true
+    },
+    {
+      "id": "cvf-cvpr",
+      "name": "CVF · CVPR",
+      "kind": "json_list",
+      "config": {
+        "adapter": "cvf",
+        "conference": "CVPR",
+        "batchSize": 5,
+        "contentType": "paper",
+        "platform": "CVF Open Access",
+        "profileUrl": "https://openaccess.thecvf.com/",
+        "_aihot": {
+          "initialBackfillLimit": 5,
+          "initialBackfillMonths": 24
+        }
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 1440,
+      "tags": [
+        "论文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "enabled": true
+    },
+    {
+      "id": "cvf-iccv",
+      "name": "CVF · ICCV",
+      "kind": "json_list",
+      "config": {
+        "adapter": "cvf",
+        "conference": "ICCV",
+        "batchSize": 5,
+        "contentType": "paper",
+        "platform": "CVF Open Access",
+        "profileUrl": "https://openaccess.thecvf.com/",
+        "_aihot": {
+          "initialBackfillLimit": 5,
+          "initialBackfillMonths": 24
+        }
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 1440,
+      "tags": [
+        "论文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "enabled": true
+    },
+    {
+      "id": "cvf-wacv",
+      "name": "CVF · WACV",
+      "kind": "json_list",
+      "config": {
+        "adapter": "cvf",
+        "conference": "WACV",
+        "batchSize": 5,
+        "contentType": "paper",
+        "platform": "CVF Open Access",
+        "profileUrl": "https://openaccess.thecvf.com/",
+        "_aihot": {
+          "initialBackfillLimit": 5,
+          "initialBackfillMonths": 24
+        }
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 1440,
+      "tags": [
+        "论文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "enabled": true
+    },
+    {
+      "id": "x-sainingxie",
+      "name": "Saining Xie · X",
+      "kind": "x_search",
+      "config": {
+        "query": "from:sainingxie -filter:replies",
+        "contentType": "post",
+        "platform": "X",
+        "profileUrl": "https://x.com/sainingxie"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "enabled": false
+    },
+    {
+      "id": "x-drfeifei",
+      "name": "Fei-Fei Li · X",
+      "kind": "x_search",
+      "config": {
+        "query": "from:drfeifei -filter:replies",
+        "contentType": "post",
+        "platform": "X",
+        "profileUrl": "https://x.com/drfeifei"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "enabled": false
+    },
+    {
+      "id": "wechat-woaicv",
+      "name": "我爱计算机视觉 · 公众号",
+      "kind": "mp_account",
+      "config": {
+        "nickname": "我爱计算机视觉",
+        "contentType": "post",
+        "platform": "微信公众号",
+        "profileUrl": "https://www.jiqizhixin.com/columns/woaijisuanjishijue"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "enabled": false
+    },
+    {
+      "id": "wechat-cvmart",
+      "name": "极市平台 · 公众号",
+      "kind": "mp_account",
+      "config": {
+        "nickname": "极市平台",
+        "contentType": "post",
+        "platform": "微信公众号",
+        "profileUrl": "https://cvmart.net/community"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "enabled": false
+    },
+    {
+      "id": "wechat-3dcv",
+      "name": "3D视觉工坊 · 公众号",
+      "kind": "mp_account",
+      "config": {
+        "nickname": "3D视觉工坊",
+        "contentType": "post",
+        "platform": "微信公众号",
+        "profileUrl": "https://www.3dcver.com/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [],
+      "site_fulltext": false,
+      "syndicate_fulltext": false,
+      "enabled": false
     }
   ]
 }

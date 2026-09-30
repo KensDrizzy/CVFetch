@@ -74,7 +74,7 @@ export const FeedItem = memo(function FeedItem({ item, group, filters, read = fa
 
       {research.length > 0 && (
         <div className="relative z-10 mt-3 flex flex-wrap gap-1.5" aria-label="论文研究方向">
-          {research.map((topic) => <Link key={topic.slug} to={`/all?topic=${topic.slug}`} className="rounded-mark bg-accent-softer px-2 py-1 text-[11px] font-medium text-accent-ink hover:bg-accent-soft">{topic.name}</Link>)}
+          {research.map((topic) => <Link key={topic.slug} to={`${item.source.contentType === "post" ? "/updates" : "/all"}?topic=${topic.slug}`} className="rounded-mark bg-accent-softer px-2 py-1 text-[11px] font-medium text-accent-ink hover:bg-accent-soft">{topic.name}</Link>)}
         </div>
       )}
 

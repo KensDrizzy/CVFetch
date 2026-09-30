@@ -29,6 +29,7 @@ function filterQuery(f: TimelineFilters, extra: Record<string, string | number |
   if (f.category) sp.set("category", f.category);
   if (f.tag) sp.set("tag", f.tag);
   if (f.topic) sp.set("topic", f.topic);
+  if (f.contentType) sp.set("contentType", f.contentType);
   for (const [k, v] of Object.entries(extra)) if (v !== null && v !== undefined && v !== "") sp.set(k, String(v));
   return sp.toString();
 }

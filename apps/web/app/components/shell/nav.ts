@@ -22,6 +22,8 @@ export const SIDEBAR: Array<{ title: string; items: NavItem[] }> = [
     items: [
       { to: "/", label: HOME.feedTitle, icon: IconBolt, end: true },
       { to: "/all", label: HOME.allTitle, icon: IconList },
+      { to: "/updates", label: "研究动态", icon: IconMessage },
+      { to: "/following", label: "关注来源", icon: IconPlug },
       { to: "/hot", label: "热点榜", icon: IconFlame },
       { to: "/daily", label: withSubject("日报"), icon: IconDoc },
       { to: "/topics", label: "主题", icon: IconGrid },
@@ -54,12 +56,12 @@ export const SIDEBAR: Array<{ title: string; items: NavItem[] }> = [
 export const TABBAR: NavItem[] = [
   { to: "/", label: "精选", icon: IconBolt, end: true },
   { to: "/all", label: "全部", icon: IconList },
-  { to: "/daily", label: "日报", icon: IconDoc },
+  { to: "/updates", label: "动态", icon: IconMessage },
   { to: "/more", label: "更多", icon: IconApps, changelog: true },
 ];
 
 /** Pages reached from the mobile "更多" tab keep that tab highlighted. */
-export const MORE_PATHS = ["/more", "/hot", "/topics", "/starred", "/leaderboard", "/codex-reset", "/agent", "/about", "/changelog", "/feedback", "/terms", "/privacy"];
+export const MORE_PATHS = ["/more", "/following", "/daily", "/weekly", "/monthly", "/hot", "/topics", "/starred", "/leaderboard", "/codex-reset", "/agent", "/about", "/changelog", "/feedback", "/terms", "/privacy"];
 
 export function tabIsActive(item: NavItem, pathname: string): boolean {
   if (item.end) return pathname === item.to;

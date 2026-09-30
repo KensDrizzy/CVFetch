@@ -37,6 +37,7 @@ export interface ItemRow {
   source_id: string;
   source_name: string;
   source_kind: SourceKind;
+  source_content_type?: "paper" | "post";
   /** Participation mode of the source now (editorial, hot_signal, isolated). */
   source_mode: string;
   source_icon: string | null;
@@ -55,7 +56,7 @@ export const ITEM_COLUMNS = sql`
   p.article_id AS id, p.revision, p.title, p.original_title, p.summary, p.reason, p.category, p.tags, p.score,
   p.selected, p.eligible, p.channel, p.url, p.published_at, p.discovered_at, p.timeline_at, p.sort_at, p.first_party, p.visibility,
   p.body_mode, p.syndicate, p.indexable, p.visible_after, p.backfill, p.fact_id, p.story_id,
-  s.id AS source_id, s.name AS source_name, s.kind AS source_kind, s.participation_mode AS source_mode, s.icon_url AS source_icon,
+  s.id AS source_id, s.name AS source_name, s.kind AS source_kind, CASE WHEN s.kind IN ('x_search', 'mp_account') OR s.config->>'contentType' = 'post' THEN 'post' ELSE 'paper' END AS source_content_type, s.participation_mode AS source_mode, s.icon_url AS source_icon,
   a.x_post, a.author, a.language,
   st.public_id::text AS story_public_id, st.title AS story_title,
   CASE WHEN p.channel = 'x' THEN tr.body_text END AS zh_text, qt.text_zh AS quoted_zh`;
@@ -162,6 +163,7 @@ export function toItemSummary(row: ItemRow): ItemSummary {
       id: row.source_id,
       name: row.source_name,
       kind: row.source_kind,
+      contentType: row.source_content_type ?? (row.source_kind === "x_search" || row.source_kind === "mp_account" ? "post" : "paper"),
       firstParty: row.first_party,
       iconUrl: proxiedImage(row.source_icon, "avatar"),
       ...(proxiedImageSet(row.source_icon, "avatar") ? { iconSrcSet: proxiedImageSet(row.source_icon, "avatar")! } : {}),
@@ -185,7 +187,7 @@ export function toFeedItemSummary(row: ItemRow): FeedItemSummary {
   const item = toItemSummary(row);
   return {
     id: item.id, title: item.title, summary: item.summary, reason: item.reason,
-    source: { name: item.source.name }, publishedAt: item.publishedAt, timelineAt: item.timelineAt,
+    source: { name: item.source.name, contentType: item.source.contentType }, publishedAt: item.publishedAt, timelineAt: item.timelineAt,
     category: item.category, tags: item.tags, score: item.score, selected: item.selected, channel: item.channel,
     x: item.x ? {
       authorName: item.x.authorName, handle: item.x.handle, avatarUrl: item.x.avatarUrl,
@@ -199,4 +201,12 @@ export async function fetchItemsByIds(ids: string[], db: Db = sql): Promise<Map<
   if (ids.length === 0) return new Map();
   const rows = await db<ItemRow[]>`SELECT ${ITEM_COLUMNS} ${ITEM_FROM} WHERE p.article_id IN ${db(ids)}`;
   return new Map(rows.map((r) => [r.id, r]));
+}
+
+/** Source provenance separates a paper from a post discussing that paper. */
+export function contentTypeCondition(type: "paper" | "post" | null | undefined) {
+  if (!type) return sql``;
+  const post = sql`EXISTS (SELECT 1 FROM sources cs WHERE cs.id = p.source_id AND
+    (cs.kind IN ('x_search', 'mp_account') OR cs.config->>'contentType' = 'post'))`;
+  return type === "post" ? sql`AND ${post}` : sql`AND NOT ${post}`;
 }

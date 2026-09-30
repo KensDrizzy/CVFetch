@@ -45,6 +45,8 @@ async function build(): Promise<string> {
     { loc: "/weekly", changefreq: "weekly", priority: 0.7 },
     { loc: "/monthly", changefreq: "monthly", priority: 0.6 },
     { loc: "/topics", changefreq: "daily", priority: 0.7 },
+    { loc: "/updates", changefreq: "daily", priority: 0.7 },
+    { loc: "/following", changefreq: "weekly", priority: 0.5 },
     { loc: "/agent", lastmod: now, changefreq: "weekly", priority: 0.7 },
     { loc: "/about", changefreq: "monthly", priority: 0.5 },
     { loc: "/terms", changefreq: "monthly", priority: 0.4 },

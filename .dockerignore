@@ -3,6 +3,7 @@ apps/web/node_modules
 apps/web/build
 apps/web/.react-router
 .data
+.firecrawl
 .env
 .env.*
 !.env.example

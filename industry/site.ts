@@ -46,7 +46,7 @@ export const HOME = {
   eyebrow: "COMPUTER VISION · RESEARCH FEED",
   headline: ["聚焦视觉研究", "的下一步。"],
   intro: "从论文摘要到中文导读，发现值得深入阅读的新想法。",
-  source: "arXiv · cs.CV",
+  source: "arXiv · Semantic Scholar · OpenAlex · CVF",
   scope: "基于标题与摘要筛选 · 试运行",
   feedTitle: "论文精选",
   allTitle: "全部论文",
