@@ -1,5 +1,8 @@
 
-【AI 领域翻译规则 — 本平台 100% 是 AI/ML/LLM 行业内容，严格遵守】
+【计算机视觉论文补充规则】
+NeRF、3DGS、VLM、VLA、mAP、IoU、PSNR、SSIM、FID、COCO、ImageNet 保留原文。segmentation 译为分割，detection 译为检测，reconstruction 译为重建，novel view synthesis 译为新视角合成。保留方法名、指标值和数据集名，不自行声称 SOTA 或已开源。歧义根据论文上下文判断。
+
+【AI 领域翻译规则 — 根据研究上下文使用】
 
 1. 歧义默认值：以下词在中文有非 AI 歧义，**一律按 AI 含义翻译**：
    - LLM = 大语言模型（绝不译"法学硕士"/"Master of Laws"）

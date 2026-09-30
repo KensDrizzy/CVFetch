@@ -1,5 +1,5 @@
-import { SITE, withSubject } from "@aihot/industry/site";
-import { data as withHeaders, redirect, useLoaderData } from "react-router";
+import { HOME } from "@aihot/industry/site";
+import { Link, data as withHeaders, redirect, useLoaderData } from "react-router";
 import type { Route } from "./+types/home";
 import type { TimelineResponse } from "@aihot/contracts/site";
 import { isCategoryKey, isChannelKey } from "@aihot/contracts/taxonomy";
@@ -8,7 +8,7 @@ import { listPath, organizationLd, pageMeta } from "../lib/seo";
 import { Wordmark } from "../components/Logo";
 import { Timeline } from "../features/feed/Timeline";
 import { HotTopics } from "../features/feed/HotTopics";
-import { CategoryTabs, SearchField, SearchIconLink } from "../features/feed/Filters";
+import { CategoryTabs, SearchField } from "../features/feed/Filters";
 import { beijingDate, beijingWeekday } from "../lib/format";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -46,33 +46,62 @@ function TodayLabel() {
   );
 }
 
+/** A decorative wireframe: focus window, depth planes and feature points. */
+function VisionField() {
+  return (
+    <svg viewBox="0 0 320 240" className="vision-field" fill="none" aria-hidden="true">
+      <g stroke="currentColor" opacity="0.16">
+        {[40, 80, 120, 160, 200, 240, 280].map((x) => <path key={x} d={`M${x} 12v216`} />)}
+        {[40, 80, 120, 160, 200].map((y) => <path key={y} d={`M12 ${y}h296`} />)}
+      </g>
+      <path d="M58 72V38h34M228 38h34v34M262 168v34h-34M92 202H58v-34" stroke="currentColor" strokeWidth="3" />
+      <g stroke="currentColor" strokeWidth="1.2">
+        <path d="m160 51 68 38v72l-68 38-68-38V89Z" opacity="0.8" />
+        <path d="m92 89 68 39 68-39M160 128v71M126 70l68 39v71M194 70l-68 39v71M92 125l68 38 68-38" opacity="0.5" />
+        <path d="m126 109 68 0-34 54Z" opacity="0.5" />
+      </g>
+      {[[160,51],[228,89],[228,161],[160,199],[92,161],[92,89],[160,128],[126,109],[194,109],[160,163]].map(([cx,cy], i) => <circle key={i} cx={cx} cy={cy} r={i === 6 ? 5 : 3} fill="currentColor" />)}
+      <path d="M38 128h244" stroke="currentColor" strokeDasharray="3 5" opacity="0.45" />
+    </svg>
+  );
+}
+
 export default function Home() {
   const { data, filters } = useLoaderData<typeof loader>();
-  const title = filters.tag ? `#${filters.tag}` : "精选";
+  const title = filters.tag ? `#${filters.tag}` : HOME.feedTitle;
   return (
-    <div className="pb-6">
-      {/* Phones: brand bar, today's hot topics, then the feed under "最新精选". */}
-      <div className="flex h-14 items-center justify-between lg:hidden">
-        <Wordmark size={20} className="text-ink" />
+    <div className="research-home pb-6">
+      <div className="flex h-16 items-center justify-between lg:hidden">
+        <Wordmark size={21} className="text-ink" />
         <TodayLabel />
       </div>
-      <div className="hidden lg:block">
-        <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">{title}</h1>
-        <div className="mb-5 mt-4 flex items-center justify-between gap-4">
-          <CategoryTabs base="/" category={filters.category} channel={filters.channel} layoutId="home-cat-desk" className="min-w-0" />
-          <SearchField variant="track" keep={{ category: filters.category }} />
+      <header className="research-hero">
+        <div className="relative z-10 max-w-[640px]">
+          <p className="mono text-[10px] font-medium tracking-[0.16em] text-[#91cfc6] sm:text-[11px]">{HOME.eyebrow}</p>
+          <h1 className="mt-4 text-[28px] font-semibold leading-[1.3] tracking-tight sm:text-[34px] lg:text-[38px]">{HOME.headline.map((line) => <span key={line} className="inline-block whitespace-nowrap">{line}</span>)}</h1>
+          <p className="mt-3 max-w-[390px] text-[14px] leading-7 text-[#bccfce]">{HOME.intro}</p>
+          <div className="mt-6 flex flex-wrap items-center gap-3 text-[11px] sm:text-[12px]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5"><span className="size-1.5 rounded-full bg-[#83e1cb]" />{HOME.source}</span>
+            <span className="text-[#adc8c4]">{HOME.scope}</span>
+          </div>
         </div>
-      </div>
-
-      {data.hot && <HotTopics entries={data.hot} />}
-
-      <h2 className="mt-6 text-[20px] font-bold text-ink lg:hidden">{filters.tag ? title : "最新精选"}</h2>
-      <div className="-mx-4 mt-3 flex items-center gap-2 pl-4 pr-2 lg:hidden">
-        <CategoryTabs base="/" category={filters.category} channel={filters.channel} layoutId="home-cat-mobile" size="sm" className="min-w-0 flex-1" />
-        <SearchIconLink />
-      </div>
-
-      <Timeline initial={data} filters={data.filters} />
+        <VisionField />
+      </header>
+      <section aria-label={HOME.feedTitle}>
+        <div className="mb-4 mt-8 flex items-center justify-between gap-3">
+          <div className="flex items-baseline gap-3">
+            <h2 className="text-[21px] font-bold tracking-tight">{title}</h2>
+            <span className="hidden text-[12px] text-ink-4 sm:inline">按收录时间排列</span>
+          </div>
+          <Link to="/all" className="text-[13px] font-medium text-accent hover:underline">{HOME.allTitle} <span aria-hidden="true">↗</span></Link>
+        </div>
+        <div className="research-filters mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <CategoryTabs base="/" category={filters.category} channel={filters.channel} layoutId="home-cat" className="min-w-0" />
+          <SearchField keep={{ category: filters.category }} />
+        </div>
+        {data.hot && <HotTopics entries={data.hot} />}
+        <Timeline initial={data} filters={data.filters} />
+      </section>
     </div>
   );
 }

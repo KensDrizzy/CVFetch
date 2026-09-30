@@ -20,7 +20,7 @@ const provider = await stub((_hit, req) => {
   const user = String(body.messages.at(-1)!.content);
   seen.push({ model: body.model, system });
   const content =
-    system.includes("宽召回") ? { label: "PASS", reason: "测试" }
+    system.includes("计算机视觉研究相关性预筛") ? { label: "PASS", reason: "测试" }
     : system.includes("事件注意力评分器") ? { attentionScore: 80 }
     : system.includes("内容理解编辑") ? { itemType: "product_launch", authorRole: "principal", tags: ["产品更新"], editorialJudgment: "理由", titleZh: "一个模型的标题", summaryZh: "一个模型写的摘要。第二句。" }
     : system.includes("资料结构化助手") ? { category: "ai-products", tags: ["产品更新"], subjects: [], fact: null }

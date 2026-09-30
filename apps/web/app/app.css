@@ -68,7 +68,7 @@
   --radius-mark: 5px;
   --radius-control: 8px;
   --radius-tile: 10px;
-  --radius-card: 12px;
+  --radius-card: 16px;
   --radius-panel: 14px;
   --radius-sheet: 16px;
 
@@ -83,21 +83,18 @@
 }
 
 :root {
-  /* Page widths follow the screen's shape. Lists fill the screen up to 21:9
-     and centre beyond it (32:9); reading pages fill a 16:9 screen and centre on wider ones. A browser
-     window is shorter than its screen (tabs, address bar), so a 16:9 screen gives a window of about 2:1
-     and a 21:9 screen one of about 2.7:1. 236px is the sidebar and the main area's padding. */
-  --page-max-wide: max(1200px, calc(270dvh - 236px));
-  --page-max-reading: max(1100px, calc(200dvh - 236px));
+  /* Keep long paper titles and abstracts readable on wide displays. */
+  --page-max-wide: 1160px;
+  --page-max-reading: 1160px;
   color-scheme: light;
-  --bg: #faf9f6;
-  --bg-sunk: #f3f3ef;
+  --bg: #f5f7f8;
+  --bg-sunk: #edf1f2;
   --bg-muted: #e9ede9;
   --surface: #ffffff;
   --surface-2: #fdfdfb;
   --raised: #ffffff;
-  --sidebar: #fdfdfb;
-  --daybar: #f0f2ee;
+  --sidebar: #ffffff;
+  --daybar: #edf1f2;
   --field: #eef1ed;
   --ink: #202a30;
   --ink-2: #303c42;
@@ -106,8 +103,8 @@
   --line: #dfe4e1;
   --line-strong: #d1d9d5;
   --line-soft: #e9ede9;
-  --accent: #176b75;
-  --accent-ink: #145f68;
+  --accent: #12796f;
+  --accent-ink: #09685f;
   --accent-soft: rgba(23, 107, 117, 0.08);
   --accent-softer: rgba(23, 107, 117, 0.05);
   --accent-contrast: #ffffff;
@@ -143,7 +140,7 @@
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #13191c;
+  --bg: #10191d;
   --bg-sunk: #182024;
   --bg-muted: #202a2f;
   --surface: #1a2226;
@@ -531,4 +528,46 @@
 }
 @keyframes cr-pulse {
   50% { box-shadow: 0 0 0 7px color-mix(in srgb, currentColor 6%, transparent); }
+}
+
+/* CVFetch: a quiet reading surface with a computer-vision focus field. */
+.research-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 36px 38px;
+  border: 1px solid #294a4d;
+  border-radius: 20px;
+  background: #122e35;
+  color: #f4fbfa;
+}
+.vision-field {
+  position: absolute;
+  width: 300px;
+  height: 240px;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #83e1cb;
+  opacity: 0.8;
+}
+.research-filters {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.paper-card { transition: border-color 160ms, box-shadow 160ms; }
+@media (min-width: 961px) {
+  .paper-card:hover { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+}
+@media (max-width: 1279px) {
+  .vision-field { right: -45px; opacity: 0.2; }
+}
+@media (max-width: 640px) {
+  .research-hero { padding: 26px 22px; border-radius: 16px; }
+  .research-hero h1 { max-width: 270px; }
+  .research-hero p { text-wrap: pretty; }
+  .vision-field { right: -100px; opacity: 0.12; }
+  .research-filters { padding: 10px; }
+  .research-filters form { width: 100%; }
 }

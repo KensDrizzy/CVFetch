@@ -21,6 +21,12 @@ const source = (config: Record<string, unknown>) => ({ id: "test-list", config }
 // map, the route table naming the homepage's chunks, and the chunk with the Blog list among the menu,
 // the model cards, the other sections and a Paper list built at run time.
 const pages: Record<string, (cdn: string) => string> = {
+  "/arxiv.xml": () => `<feed xmlns="http://www.w3.org/2005/Atom"><entry>
+    <title>A visual reconstruction method</title><link rel="alternate" href="https://arxiv.org/abs/2609.00001v1"/>
+    <published>2026-09-28T17:00:00Z</published><updated>2026-09-29T17:00:00Z</updated>
+    <author><name>Alice</name></author><author><name>Bob</name></author>
+    <summary>${"We reconstruct three dimensional scenes from images with a reusable visual method. ".repeat(40)}</summary>
+    </entry></feed>`,
   "/": (cdn) =>
     `<html><head><script defer src="${cdn}static/js/lib-react.a6be410a.js"></script><script defer src="${cdn}static/js/4752.2908c99e.js"></script>` +
     `<script defer src="${cdn}static/js/index.c5195ace.js"></script></head><body><a href="/zh/index">简体中文</a><a href="/mimocode">MiMo Code</a>` +
@@ -102,6 +108,18 @@ test("anchors into the listing page itself are navigation, not posts", () => {
   ].join("");
   const out = fromHtml(html, "https://example.org/", source({ url: "https://example.org/" }));
   assert.deepEqual(out.map((c) => c.url), ["https://example.org/blog/mimo-v2-6-tool-call"]);
+});
+
+test("Atom summaries can supply complete analysis text and preserve every author", async () => {
+  const feed = { id: "test-arxiv", config: { feedUrl: `${site}/arxiv.xml`, summaryIsBody: true }, participation_mode: "editorial", cursor: null };
+  const { candidates: [paper] } = await fetchRss(feed as never);
+  assert.equal(paper!.author, "Alice, Bob");
+  assert.equal(paper!.bodyStatus, "ok");
+  assert.ok(paper!.bodyText!.length > 2000, "the analysis text must not be truncated to the excerpt limit");
+  assert.equal(paper!.publishedAt!.toISOString(), "2026-09-28T17:00:00.000Z");
+  assert.equal(paper!.sourceUpdatedAt!.toISOString(), "2026-09-29T17:00:00.000Z");
+  const without = await fetchRss({ ...feed, config: { feedUrl: `${site}/arxiv.xml` } } as never);
+  assert.equal(without.candidates[0]!.bodyStatus, "pending", "summary promotion remains opt-in");
 });
 
 test("promotions a feed rotates inside its posts are left out of the body", () => {

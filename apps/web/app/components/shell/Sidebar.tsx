@@ -26,7 +26,7 @@ function SideLink({ item, dot }: { item: NavItem; dot: boolean }) {
       prefetch="intent"
       aria-current={isActive ? "page" : undefined}
       className={`flex h-10 items-center gap-2.5 rounded-control px-2.5 text-[14px] transition-colors duration-150 ${
-        isActive ? "bg-accent/10 font-semibold text-ink dark:bg-accent-soft" : "font-medium text-ink-3 hover:bg-bg-sunk hover:text-ink"
+        isActive ? "bg-accent-soft font-semibold text-accent-ink ring-1 ring-inset ring-accent/10" : "font-medium text-ink-3 hover:bg-bg-sunk hover:text-ink"
       }`}
     >
       <span className={`flex w-[22px] shrink-0 justify-center ${isActive ? "text-accent" : ""}`}>
@@ -41,10 +41,11 @@ function SideLink({ item, dot }: { item: NavItem; dot: boolean }) {
 export function Sidebar({ changelogVersion }: { changelogVersion: string | null }) {
   const dot = useChangelogDot(changelogVersion);
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[180px] shrink-0 flex-col border-r border-line bg-sidebar px-3 pb-3.5 pt-6 lg:flex">
-      <Link to="/" className="mb-4 flex h-[50px] items-center px-1 text-ink" aria-label={`${SITE.name} 首页`}>
+    <aside className="sticky top-0 hidden h-dvh w-[208px] shrink-0 flex-col border-r border-line bg-sidebar px-4 pb-4 pt-7 lg:flex">
+      <Link to="/" className="mb-2 flex h-[50px] items-center px-2 text-ink" aria-label={`${SITE.name} 首页`}>
         <Wordmark size={24} />
       </Link>
+      <p className="mb-5 px-2 text-[11px] leading-5 text-ink-4">{SITE.tagline}</p>
       <nav className="-mx-1 flex-1 overflow-y-auto px-1" aria-label="主导航">
         {SIDEBAR.map((section) => (
           <div key={section.title}>

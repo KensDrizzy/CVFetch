@@ -17,9 +17,9 @@ import { apiGet } from "./lib/api.server";
 import { useHydratedFlag } from "./lib/hydration";
 
 export const links: Route.LinksFunction = () => [
-  { rel: "icon", href: "/favicon.ico", sizes: "any" },
-  { rel: "icon", type: "image/png", href: "/icon.png" },
-  { rel: "apple-touch-icon", href: "/apple-icon.png" },
+  { rel: "icon", href: "/favicon.ico?v=cv-1", sizes: "any" },
+  { rel: "icon", type: "image/png", href: "/icon.png?v=cv-1" },
+  { rel: "apple-touch-icon", href: "/apple-icon.png?v=cv-1" },
   { rel: "manifest", href: "/manifest.webmanifest" },
   { rel: "alternate", type: "application/rss+xml", title: `${SITE.name} — 精选`, href: "/feed.xml" },
 ];
@@ -44,8 +44,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf9f6" />
-        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#13191c" />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f7f8" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#10191d" />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <Meta />
         <Links />

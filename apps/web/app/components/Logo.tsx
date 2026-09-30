@@ -5,7 +5,7 @@ import { SITE } from "@aihot/industry/site";
 export function Wordmark({ size = 22, className = "" }: { size?: number; className?: string }) {
   return (
     <span className={`inline-flex items-center font-black leading-none tracking-[-0.03em] ${className}`} style={{ fontSize: size }} aria-label={SITE.name} role="img">
-      <span aria-hidden="true" className="mr-[0.3em] inline-block size-[0.42em] rounded-full bg-accent" />
+      <img src="/logo.svg?v=cv-1" alt="" aria-hidden="true" className="mr-[0.4em] size-[1.4em] rounded-[0.36em]" />
       <span aria-hidden="true">{SITE.name}</span>
     </span>
   );

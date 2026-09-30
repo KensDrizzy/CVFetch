@@ -185,13 +185,14 @@ export async function fetchRss(source: SourceRow, opts: { force?: boolean } = {}
       if (!link || !title) continue;
       const content = text(e.content);
       const summary = text(e.summary);
-      const bodyHtml = content ? sanitizeBody(content, link) : null;
+      const bodyHtmlRaw = content || (summaryIsBody ? summary : "");
+      const bodyHtml = bodyHtmlRaw ? sanitizeBody(bodyHtmlRaw, link) : null;
       const entryUrl = new URL(link, url).toString();
       out.push({
         url: entryUrl,
         ...identity(entryUrl),
         title,
-        author: text(arr(e.author)[0]?.name) || null,
+        author: arr(e.author).map((a) => text(a?.name)).filter(Boolean).join(", ") || null,
         publishedAt: parseDate(text(e.published) || text(e.updated)),
         sourceUpdatedAt: parseDate(text(e.updated)),
         ...feedText(bodyHtml, summary, source),
