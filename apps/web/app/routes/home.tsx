@@ -29,7 +29,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const requestedPage = Number(url.searchParams.get("page") ?? 1);
   const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? Math.min(requestedPage, 100_000) : 1;
   const upstream = new Headers();
-  const data = await loadOr404<TimelineResponse>(`/api/site/timeline${queryString({ channel: channel === "all" ? null : channel, category, tag, topic, contentType, page, limit: 20 })}`, { responseHeaders: upstream, signal: request.signal });
+  const data = await loadOr404<TimelineResponse>(`/api/site/timeline${queryString({ channel: channel === "all" ? null : channel, category, tag, topic, contentType, page, limit: 5 })}`, { responseHeaders: upstream, signal: request.signal });
   if (data.pagination && data.pagination.page !== page) {
     url.searchParams.set("page", String(data.pagination.page));
     throw redirect(`${url.pathname}${url.search}`);
@@ -118,12 +118,11 @@ export default function Home() {
         </div>
         {activeTopic && <p className="mb-4 text-[13px] leading-6 text-ink-3">{activeTopic.definition}</p>}
         {data.hot && <HotTopics entries={data.hot} />}
-        {paging && <div className="mb-4 flex flex-wrap items-center justify-between gap-2 [&_nav]:mt-0">
-          <p className="text-[13px] text-ink-3">共 {paging.total} 条 · 每页 {paging.pageSize} 条 · 第 {paging.page} / {paging.pageCount} 页</p>
+        <TimelinePage key={JSON.stringify([filters, paging?.page])} data={data} />
+        {paging && <div className="mt-5">
+          <p className="text-center text-[13px] text-ink-3">共 {paging.total} 条 · 每页 {paging.pageSize} 条 · 第 {paging.page} / {paging.pageCount} 页</p>
           <Pagination page={paging.page} pageCount={paging.pageCount} href={pageHref} />
         </div>}
-        <TimelinePage key={JSON.stringify([filters, paging?.page])} data={data} />
-        {paging && <Pagination page={paging.page} pageCount={paging.pageCount} href={pageHref} />}
       </section>
     </div>
   );
