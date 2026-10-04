@@ -66,3 +66,11 @@ OPENALEX_API_KEY=
 - [Semantic Scholar API](https://api.semanticscholar.org/api-docs/)
 - [OpenAlex API](https://help.openalex.org/api/)、[鉴权和额度](https://help.openalex.org/api/authentication/)
 - [CVF Open Access](https://openaccess.thecvf.com/)
+
+## 运行状态与重试
+
+来源页提供公开收录数、检查频率、最近成功时间和计划检查时间。会议目录进度表示已扫描条目数，不代表全部通过模型筛选；同一论文可被多个来源发现，来源计数不能直接相加当作站内论文总数。超过计划检查时间 30 分钟且没有新的采集记录会显示“更新延迟”，不把旧的成功记录当成后台始终在线。
+
+RSS、Semantic Scholar、CVF 与 OpenAlex 在收到 429 / 503 的 `Retry-After` 时，使用该等待时间与原有退避时间中较长者（外部等待值最多一天），交给后台调度再试，不在页面访问时补抓。失败不会推进成功游标。arXiv 与其他学术源保留配置的检查频率，不因文章变多而自动加速请求。
+
+公开页只显示归类后的错误提示，不显示原始错误、凭据或采集配置。作者账号仍需先配置凭据并启用，才会采集。

@@ -5,7 +5,7 @@ import { guardedFetch } from "../lib/http-fetch.ts";
 import { collapseWhitespace } from "../lib/text.ts";
 import { paidRequest, ProviderRejectedError } from "../providers/receipts.ts";
 import { normalizePaperIdentifier } from "../content/paper-identity.ts";
-import { FetchError, type Candidate, type SourceRow } from "./types.ts";
+import { FetchError, retryAfterMs, type Candidate, type SourceRow } from "./types.ts";
 
 export const ACADEMIC_ADAPTERS = ["semantic_scholar", "openalex", "cvf"];
 const text = (v: unknown) => typeof v === "string" ? collapseWhitespace(v) : "";
@@ -59,7 +59,7 @@ export function cvfPaper(html: string, url: string, published: string | null): C
 async function getText(url: string, headers: Record<string, string> = {}) {
   const res = await guardedFetch(url, { headers, timeoutMs: 35_000, maxBytes: 12 * 1024 * 1024,
     maxRedirects: new URL(url).hostname === "openaccess.thecvf.com" ? 3 : 0 });
-  if (res.status !== 200) throw new FetchError(`Academic source HTTP ${res.status}`, res.status);
+  if (res.status !== 200) throw new FetchError(`Academic source HTTP ${res.status}`, res.status, [429, 503].includes(res.status) ? retryAfterMs(res.headers.get("retry-after")) : null);
   return res.text();
 }
 
@@ -86,7 +86,7 @@ export async function fetchAcademic(source: SourceRow): Promise<{ candidates: Ca
     const receipt = await paidRequest({ service: "openalex", purpose: "paper_search", subject: source.id,
       identity: { url: url.toString(), window: Math.floor(Date.now() / (source.interval_minutes * 60_000)) }, requestSummary: { source: source.id, query: source.config.query ?? "computer vision" } }, async () => {
       const res = await guardedFetch(url.toString(), { headers: key ? { authorization: `Bearer ${key}` } : {}, timeoutMs: 35_000, maxRedirects: 0 });
-      if (res.status !== 200) throw new ProviderRejectedError(`OpenAlex HTTP ${res.status}`, res.status, res.status === 429 || res.status >= 500);
+      if (res.status !== 200) throw new ProviderRejectedError(`OpenAlex HTTP ${res.status}`, res.status, res.status === 429 || res.status >= 500, [429, 503].includes(res.status) ? retryAfterMs(res.headers.get("retry-after")) : null);
       const body = JSON.parse(res.text());
       if (!Array.isArray(body.results)) throw new Error("OpenAlex results missing");
       return { response: body, usage: { requests: 1 }, cost: null };

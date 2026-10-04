@@ -31,10 +31,12 @@ export class ReceiptUnknownError extends Error {
 
 /** Raised by a call when the provider clearly did not accept (and will not bill) the request. */
 export class ProviderRejectedError extends Error {
+  readonly retryAfterMs: number | null;
   readonly status: number | null;
   readonly retryable: boolean;
-  constructor(message: string, status: number | null, retryable: boolean) {
+  constructor(message: string, status: number | null, retryable: boolean, retryAfterMs: number | null = null) {
     super(message);
+    this.retryAfterMs = retryAfterMs;
     this.status = status;
     this.retryable = retryable;
   }

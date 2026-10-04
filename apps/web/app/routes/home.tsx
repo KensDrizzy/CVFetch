@@ -92,9 +92,9 @@ export default function Home() {
       <header className="research-hero">
         <div className="relative z-10 max-w-[640px]">
           <p className="mono text-[10px] font-medium tracking-[0.16em] text-[#91cfc6] sm:text-[11px]">{HOME.eyebrow}</p>
-          <h1 className="mt-4 text-[28px] font-semibold leading-[1.3] tracking-tight sm:text-[34px] lg:text-[38px]">{HOME.headline.map((line) => <span key={line} className="inline-block whitespace-nowrap">{line}</span>)}</h1>
+          <h1 className="mt-4 text-[28px] font-semibold leading-[1.3] tracking-tight sm:text-[34px] lg:text-[32px]">{HOME.headline.map((line) => <span key={line} className="inline-block whitespace-nowrap">{line}</span>)}</h1>
           <p className="mt-3 max-w-[390px] text-[14px] leading-7 text-[#bccfce]">{HOME.intro}</p>
-          <div className="mt-6 flex flex-wrap items-center gap-3 text-[11px] sm:text-[12px]">
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] sm:text-[12px]">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5"><span className="size-1.5 rounded-full bg-[#83e1cb]" />{HOME.source}</span>
             <span className="text-[#adc8c4]">{HOME.scope}</span>
           </div>

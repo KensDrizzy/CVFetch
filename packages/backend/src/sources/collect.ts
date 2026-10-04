@@ -4,7 +4,7 @@ import { sql } from "../db.ts";
 import { identityKeyFor, upsertMaterial } from "../content/materials.ts";
 import { enqueue, QUEUES } from "../jobs/queue.ts";
 import { queueProcessing } from "../jobs/content.ts";
-import { BudgetExceededError } from "../providers/receipts.ts";
+import { BudgetExceededError, ProviderRejectedError } from "../providers/receipts.ts";
 import { fetchRss } from "./rss.ts";
 import { allowed, fetchDetail, fetchWebList, type DetailNeed } from "./web-list.ts";
 import { unsupportedConfig } from "./config-keys.ts";
@@ -200,12 +200,13 @@ export async function collectSource(sourceId: string, opts: { force?: boolean } 
   } catch (error) {
     const message = String(error instanceof Error ? error.message : error).slice(0, 1000);
     const budget = error instanceof BudgetExceededError;
+    const retryMs = (error instanceof FetchError || error instanceof ProviderRejectedError) ? error.retryAfterMs ?? 0 : 0;
     await sql`
       UPDATE sources SET last_fetch_at = now(),
         fail_count = CASE WHEN ${budget} THEN fail_count ELSE fail_count + 1 END,
         last_error = ${message},
         health = CASE WHEN ${budget} THEN health WHEN fail_count + 1 >= 5 THEN 'failing' ELSE 'degraded' END,
-        next_fetch_at = now() + make_interval(mins => CASE WHEN ${budget} THEN 15 ELSE LEAST(interval_minutes * (fail_count + 2), 360) END),
+        next_fetch_at = now() + greatest(make_interval(mins => CASE WHEN ${budget} THEN 15 ELSE LEAST(interval_minutes * (fail_count + 2), 360) END), ${retryMs} * interval '1 millisecond'),
         updated_at = now()
       WHERE id = ${sourceId}`;
     await sql`UPDATE fetch_runs SET status = 'failed', finished_at = now(), found_count = ${found}, new_count = ${created}, error = ${message} WHERE id = ${run!.id}`;
@@ -354,7 +355,7 @@ export async function adaptIntervals(): Promise<{ updated: number }> {
   let updated = 0;
   for (const r of rows) {
     // Scholarly indexes and conference archives keep the explicit, bounded import cadence.
-    if (ACADEMIC_ADAPTERS.includes(r.config.adapter)) continue;
+    if (ACADEMIC_ADAPTERS.includes(r.config.adapter) || /^https:\/\/(?:export\.)?arxiv\.org\//i.test(String(r.config.feedUrl ?? ""))) continue;
     const perDay = Number(r.per_day);
     // Editorial sites and feeds are looked at hourly at least (they cost nothing);
     // editorial X and listings read through Jina stop at two hours (paid per call, within their budgets);

@@ -534,7 +534,7 @@
 .research-hero {
   position: relative;
   overflow: hidden;
-  padding: 36px 38px;
+  padding: 24px 30px;
   border: 1px solid #294a4d;
   border-radius: 20px;
   background: #122e35;
@@ -564,7 +564,7 @@
   .vision-field { right: -45px; opacity: 0.2; }
 }
 @media (max-width: 640px) {
-  .research-hero { padding: 26px 22px; border-radius: 16px; }
+  .research-hero { padding: 20px 20px; border-radius: 16px; }
   .research-hero h1 { max-width: 270px; }
   .research-hero p { text-wrap: pretty; }
   .vision-field { right: -100px; opacity: 0.12; }

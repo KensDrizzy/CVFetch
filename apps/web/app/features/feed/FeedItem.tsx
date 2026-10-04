@@ -6,6 +6,7 @@ import { Link } from "react-router";
 import { IntentLink } from "../../components/ui/IntentLink";
 import type { GroupInfo, FeedItemSummary, TimelineFilters } from "@aihot/contracts/site";
 import { CATEGORY_LABELS } from "@aihot/contracts/taxonomy";
+import { beijingDate } from "../../lib/format";
 import { SelectedBadge } from "../../components/ui/Badge";
 import { ScoreLabel } from "../../components/ui/Score";
 import { MediaThumbs, SourceLine, StarButton } from "./parts";
@@ -68,6 +69,12 @@ export const FeedItem = memo(function FeedItem({ item, group, filters, read = fa
           {item.summary && <p className="mt-1.5 line-clamp-2 text-[14.5px] leading-[1.75] text-ink-3 lg:mt-2 lg:line-clamp-3 lg:text-[14px]">{item.summary}</p>}
         </>
       )}
+
+
+      {item.source.contentType !== "post" && (item.publishedAt || item.originalUrl) && <div className="relative z-10 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-ink-4">
+        {item.publishedAt && <time dateTime={item.publishedAt}>论文发布 {beijingDate(item.publishedAt)}</time>}
+        {item.originalUrl && /^https?:\/\//.test(item.originalUrl) && <a href={item.originalUrl} target="_blank" rel="noreferrer" className="font-medium text-accent hover:underline">阅读原文 ↗</a>}
+      </div>}
 
       {isX && item.x!.media.length > 0 && <MediaThumbs media={item.x!.media} className="mt-2.5" />}
       {isX && item.x!.quoted?.text && <QuotedLine quoted={item.x!.quoted} />}

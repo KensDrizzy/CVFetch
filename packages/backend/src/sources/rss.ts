@@ -5,7 +5,7 @@ import { collapseWhitespace, stripTags } from "../lib/text.ts";
 import { sanitizeBody } from "../content/sanitize.ts";
 import { identityKeyForUrl } from "../lib/url.ts";
 import { sha256, stableJson } from "../lib/ids.ts";
-import { FetchError, type Candidate, type SourceRow } from "./types.ts";
+import { FetchError, retryAfterMs, type Candidate, type SourceRow } from "./types.ts";
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -133,7 +133,7 @@ export async function fetchRss(source: SourceRow, opts: { force?: boolean } = {}
   if (res.status === 304 && previous && (previous.etag || previous.lastModified) && res.url === previous.responseUrl) {
     return { candidates: [], validator, notModified: true };
   }
-  if (res.status !== 200) throw new FetchError(`HTTP ${res.status}`, res.status);
+  if (res.status !== 200) throw new FetchError(`HTTP ${res.status}`, res.status, [429, 503].includes(res.status) ? retryAfterMs(res.headers.get("retry-after")) : null);
   let doc: Record<string, any>;
   try {
     doc = parser.parse(res.text());

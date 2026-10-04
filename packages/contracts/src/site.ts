@@ -64,6 +64,7 @@ export interface ItemSummary {
 
 /** The fields rendered by a site feed card; full original text lives in the item detail. */
 export interface FeedItemSummary extends Pick<ItemSummary, "id" | "title" | "summary" | "reason" | "publishedAt" | "timelineAt" | "category" | "tags" | "score" | "selected" | "channel"> {
+  originalUrl?: string;
   source: Pick<SourceRef, "name" | "contentType">;
   x: (Pick<XPostView, "authorName" | "handle" | "avatarUrl" | "avatarSrcSet" | "media"> & {
     quoted: Omit<NonNullable<XPostView["quoted"]>, "url"> | null;
@@ -388,3 +389,13 @@ export interface StoryFollowupsResponse { items: StoryFollowup[]; more: boolean 
 
 /** All issue keys keep numbering and calendars stable; closed daily months omit their titles. */
 export interface ReportNavigationEntry { key: string; title?: string | null; count?: number }
+
+/** Allowlisted status data for readers; never includes raw source config or errors. */
+export interface PublicSource {
+  id: string; name: string; contentType: string; platform: string; url: string | null;
+  state: "pending" | "paused" | "retrying" | "active" | "starting" | "delayed";
+  requirements: string[]; lastSuccessAt: string | null; note: string | null;
+  intervalMinutes: number; nextCheckAt: string | null; lastCheckAt: string | null;
+  issue: string | null; publicCount: number;
+  archive: { processed: number; total: number } | null;
+}
